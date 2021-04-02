@@ -187,8 +187,8 @@ async def set_channels(ctx, lobby: str, team1: str, team2: str):
 	else:
 		await ctx.send("Invalid channel names provided.")
 
-@bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
-async def rematch(ctx):
+#@bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
+#async def rematch(ctx):
 	#need to edit the main !inhouse method so that it posts data of teams to database
 	#then pull the teams from the database, and then follow thru with same as !inhouse command
 	

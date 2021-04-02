@@ -3,7 +3,11 @@
 This is a bot to set up, manage, and run in house matches for any games in your Discord server. It can randomly create teams for you, and will move everyone to their team channel. 
 
 ## Directory Structure
-The bot.py script runs the Inhouse Discord bot. There is a hidden file, .env, which is not included in the GitHub repositiory, which has the information regarding the bot token as well as the MongoDB connection string.
+The bot.py script runs the Inhouse Discord bot. There is a hidden file, .env, which is included in the GitHub repositiory, which has the information regarding the bot token as well as the MongoDB connection string. Only included because repo is currently set to private, and the heroku server requires the .env file in the production branch.
+
+The server.py file is a simple asynchronous python web server, utilized for the heroku deployment (requires a running web server to run any python file job).
+
+The Procfile, runtime.txt, and requirements.txt files are all files that are used for the running of the file in heroku. Procfile contains command for heroku to run the web server, while runtime.txt contains the desired version of python to execute and requirements.txt contains the necessary non standard python libraries used.
 
 ## Usage
 ### Channel Set Command
