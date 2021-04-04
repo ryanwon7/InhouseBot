@@ -14,9 +14,15 @@ from pymongo import MongoClient
 # - add team create feature
 # - add exit from current command feature
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-DATABASE = os.getenv('MONGO_CONN_URL')
+
+if 'DYNO' in os.environ:
+	TOKEN = os.environ['DISCORD_TOKEN']
+	DATABASE = os.environ['MONGO_CONN_URL']
+else:
+	load_dotenv()
+	TOKEN = os.getenv('DISCORD_TOKEN')
+	DATABASE = os.getenv('MONGO_CONN_URL')
+
 
 cluster = MongoClient(DATABASE)
 
