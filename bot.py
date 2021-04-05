@@ -28,9 +28,10 @@ cluster = MongoClient(DATABASE)
 
 timeout = 600 #seconds
 db = cluster["channel-usage"]
-collection = db["channel-usage"]
+channel_usage = db["channel-usage"]
+past_teams = db["past-teams"]
 
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='#')
 
 
 def check(author):
@@ -137,7 +138,6 @@ async def inhouse_start(ctx, players: int=10):
 			reactions = ['\U0001f197', '\U0001f504']
 			for reaction in reactions:
 				await msg_orig.add_reaction(reaction)
-			await msg_orig.add_reaction(emoji=reaction)
 			reaction, user = await bot.wait_for('reaction_add', timeout = 60.0)
 			reac_name = unicodedata.name(reaction.emoji)
 			if reac_name == 'SQUARED OK':
@@ -152,7 +152,7 @@ async def inhouse_start(ctx, players: int=10):
 
 	reaction, user = await bot.wait_for('reaction_add', timeout = 600.0)
 
-	data = collection.find_one({"_id": ctx.guild.id})
+	data = channel_usage.find_one({"_id": ctx.guild.id})
 	team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
 	team2ch = discord.utils.get(ctx.guild.channels, name=data["team2"])
 
@@ -167,9 +167,17 @@ async def inhouse_start(ctx, players: int=10):
 	await msg2.delete()
 	await ctx.send('Players sent to each team channel! Good luck and have fun!')
 
+	idquery = {"_id": ctx.guild.id}
+	if past_teams.find(idquery).count():
+		past_teams.deleteOne(idquery)
+
+	post = {"_id": ctx.guild.id, "mem_names": mem_names, "members": members}
+
+	past_teams.insert_one(post)
+
 @bot.command(name='endgame', help='Move people back to the lobby channel.')
 async def end_game(ctx):
-	data = collection.find_one({"_id": ctx.guild.id})
+	data = channel_usage.find_one({"_id": ctx.guild.id})
 	lobbych = discord.utils.get(ctx.guild.channels, name=data["lobby"])
 	team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
 	team2ch = discord.utils.get(ctx.guild.channels, name=data["team2"])
@@ -182,20 +190,53 @@ async def end_game(ctx):
 async def set_channels(ctx, lobby: str, team1: str, team2: str):
 	if channels_exist(ctx, [lobby, team1, team2]):
 		idquery = {"_id": ctx.guild.id}
-		if collection.find(idquery).count():
+		if channel_usage.find(idquery).count():
 			newvalues = { "$set": {"lobby": lobby, "team1": team1, "team2": team2}}
-			collection.update_one(idquery, newvalues)
+			channel_usage.update_one(idquery, newvalues)
 			await ctx.send("Channels were set previously. Updating existing records.")
 		else:
 			post = {"_id": ctx.guild.id, "lobby": lobby, "team1": team1, "team2": team2}
-			collection.insert_one(post)
+			channel_usage.insert_one(post)
 			await ctx.send("Creating default channels for your server.")
 	else:
 		await ctx.send("Invalid channel names provided.")
 
-#@bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
-#async def rematch(ctx):
-	#need to edit the main !inhouse method so that it posts data of teams to database
-	#then pull the teams from the database, and then follow thru with same as !inhouse command
+@bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
+async def rematch(ctx):
+	idquery = {"_id": ctx.guild.id}
+	if past_teams.find(idquery).count():
+		data = past_teams.find_one()
+		mem_names = data["mem_names"]
+		members = data["members"]
+
+		data1 = channel_usage.find_one({"_id": ctx.guild.id})
+		team1ch = discord.utils.get(ctx.guild.channels, name=data1["team1"])
+		team2ch = discord.utils.get(ctx.guild.channels, name=data1["team2"])
+
+		for member in mem_names:
+			mem_str += member.ljust(25)
+			if count % 2 == 0:
+				mem_str += '\n'
+			count+=1
+		response = 'Here are the rematch teams. To confirm and move to channels, react with OK.\n'
+		
+		msg_orig = await ctx.send(resp)
+		await msg_orig.add_reaction(emoji='\U0001f504')
+		reaction, user = await bot.wait_for('reaction_add', timeout = 60.0)
+		reac_name = unicodedata.name(reaction.emoji)
+		if reac_name == 'SQUARED OK':
+			team1 = mem_names[0::2]
+			team2 = mem_names[1::2]
+
+			for member in members:
+				if member.name in team1:
+					await member.move_to(team2ch)
+				elif member.name in team2:
+					await member.move_to(team1ch)
+
+			await ctx.send('Players sent to each team channel! Good luck and have fun!')
 	
+	else:
+		await ctx.send("No games have been played using the InHouse Bot yet.")
+
 bot.run(TOKEN)
