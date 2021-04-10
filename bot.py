@@ -51,7 +51,20 @@ def channels_exist(ctx, vc_list):
 		return 0
 
 
-def remove_players_str(ctx, members, mem_add, players):
+def randomizer(mem_names):
+	random.shuffle(mem_names)
+	mem_str = "Team 1".ljust(25) + "Team 2\n"
+	count = 1
+	for member in mem_names:
+		mem_str += member.ljust(25)
+		if count % 2 == 0:
+			mem_str += '\n'
+		count+=1
+	response = 'Here are randomized teams. To accept, react with the ok reaction. To re randomize, react with the reroll button.\n'
+	return (response + mem_str)
+
+
+def remove_players_str(ctx, members, mem_add):
 	count = 1
 	mem_str = ""
 	for member in members:
@@ -65,19 +78,6 @@ def remove_players_str(ctx, members, mem_add, players):
 		count+=1
 
 	response = 'Please select which of the following members should be removed from the game by their numbers. For example, to remove players 4, 8, and 12 from the inhouse game, reply with \'4 8 12\' (without apostrophes)\n\n'
-	return response + mem_str
-
-
-def randomizer(mem_names):
-	random.shuffle(mem_names)
-	mem_str = "Team 1".ljust(25) + "Team 2\n"
-	count = 1
-	for member in mem_names:
-		mem_str += member.ljust(25)
-		if count % 2 == 0:
-			mem_str += '\n'
-		count+=1
-	response = 'Here are randomized teams. To accept, react with the ok reaction. To re randomize, react with the reroll button.\n'
 	return response + mem_str
 
 
@@ -99,7 +99,7 @@ async def inhouse_start(ctx, players: int=10):
 		reac_name = unicodedata.name(reaction.emoji)
 		if reac_name == 'HEAVY MINUS SIGN':
 			await msg_orig.delete()
-			resp = remove_players_str(ctx, members, mem_add, players)
+			resp = remove_players_str(ctx, members, mem_add)
 			msg1 = await ctx.send(resp)
 			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=120)
 			resp_list = list(map(int, msg.content.split()))
@@ -201,6 +201,7 @@ async def set_channels(ctx, lobby: str, team1: str, team2: str):
 	else:
 		await ctx.send("Invalid channel names provided.")
 
+
 @bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
 async def rematch(ctx):
 	idquery = {"_id": ctx.guild.id}
@@ -238,5 +239,6 @@ async def rematch(ctx):
 	
 	else:
 		await ctx.send("No games have been played using the InHouse Bot yet.")
+
 
 bot.run(TOKEN)
