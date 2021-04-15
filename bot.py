@@ -26,12 +26,12 @@ else:
 
 cluster = MongoClient(DATABASE)
 
-timeout = 600 #seconds
+timeout = 2400 #seconds
 db = cluster["channel-usage"]
 channel_usage = db["channel-usage"]
 past_teams = db["past-teams"]
 
-bot = commands.Bot(command_prefix='#')
+bot = commands.Bot(command_prefix='&')
 
 
 def check(author):
@@ -62,6 +62,21 @@ def randomizer(mem_names):
 		count+=1
 	response = 'Here are randomized teams. To accept, react with the ok reaction. To re randomize, react with the reroll button.\n'
 	return (response + mem_str)
+
+
+def remove_players(ctx, member, mem_add):
+	resp = remove_players_str(ctx, members, mem_add)
+	msg_del = await ctx.send(resp)
+	msg_reac = await bot.wait_for('message', check=check(ctx.message.author), timeout=600)
+	resp_list = list(map(int, msg.content.split()))
+	resp_list.sort(reverse=True)
+	for idx in resp_list:
+		if idx <= len(members):
+			del members[idx-1]
+		else:
+			del mem_add[idx-len(members)-1]
+	await msg_reac.delete()
+	await msg_del.delete()
 
 
 def remove_players_str(ctx, members, mem_add):
@@ -95,13 +110,13 @@ async def inhouse_start(ctx, players: int=10):
 		for reaction in reactions:
 			await msg_orig.add_reaction(emoji=reaction)
 		await asyncio.sleep(0.5)
-		reaction, user = await bot.wait_for('reaction_add', timeout = 120.0)
+		reaction, user = await bot.wait_for('reaction_add', timeout = 600)
 		reac_name = unicodedata.name(reaction.emoji)
 		if reac_name == 'HEAVY MINUS SIGN':
 			await msg_orig.delete()
 			resp = remove_players_str(ctx, members, mem_add)
 			msg1 = await ctx.send(resp)
-			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=120)
+			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=600)
 			resp_list = list(map(int, msg.content.split()))
 			resp_list.sort(reverse=True)
 			for idx in resp_list:
@@ -115,7 +130,7 @@ async def inhouse_start(ctx, players: int=10):
 			await msg_orig.delete()
 			resp = "Please list the names of the players you would like to add. Since they are currently not connected to a voice channel, they will not be able to be moved to their team channel. For example, to add rwon and Elijah p, reply with \'rwon \"Elijah p\"\' (without apostrophes)\n"
 			msg1 = await ctx.send(resp)
-			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=120)
+			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=600)
 			for user in msg.content.split():
 				mem_add.append(user)
 			await msg.delete()
@@ -129,7 +144,10 @@ async def inhouse_start(ctx, players: int=10):
 	else:
 		mem_names = []
 		for member in members:
-			mem_names.append(member.name)
+			if member.nick:
+				mem_names.append(member.nick)
+			else:
+				mem_names.append(member.name)
 		mem_names.extend(mem_add)
 		timeout_start = time.time()
 		while time.time() < timeout_start + timeout:
@@ -138,7 +156,7 @@ async def inhouse_start(ctx, players: int=10):
 			reactions = ['\U0001f197', '\U0001f504']
 			for reaction in reactions:
 				await msg_orig.add_reaction(reaction)
-			reaction, user = await bot.wait_for('reaction_add', timeout = 60.0)
+			reaction, user = await bot.wait_for('reaction_add', timeout = 600.0)
 			reac_name = unicodedata.name(reaction.emoji)
 			if reac_name == 'SQUARED OK':
 				break
@@ -150,7 +168,7 @@ async def inhouse_start(ctx, players: int=10):
 	await msg2.add_reaction(emoji='\U0001f197')
 	await asyncio.sleep(0.5)
 
-	reaction, user = await bot.wait_for('reaction_add', timeout = 600.0)
+	reaction, user = await bot.wait_for('reaction_add', timeout = 1200.0)
 
 	data = channel_usage.find_one({"_id": ctx.guild.id})
 	team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
