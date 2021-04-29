@@ -60,23 +60,8 @@ def randomizer(mem_names):
 		if count % 2 == 0:
 			mem_str += '\n'
 		count+=1
-	response = 'Here are randomized teams. To accept, react with the ok reaction. To re randomize, react with the reroll button.\n'
+	response = 'Here are randomized teams. To accept, react with :ok:. To re randomize, react with :arrows_counterclockwise:. To exit, react with :x:.\n'
 	return (response + mem_str)
-
-
-def remove_players(ctx, member, mem_add):
-	resp = remove_players_str(ctx, members, mem_add)
-	msg_del = await ctx.send(resp)
-	msg_reac = await bot.wait_for('message', check=check(ctx.message.author), timeout=600)
-	resp_list = list(map(int, msg.content.split()))
-	resp_list.sort(reverse=True)
-	for idx in resp_list:
-		if idx <= len(members):
-			del members[idx-1]
-		else:
-			del mem_add[idx-len(members)-1]
-	await msg_reac.delete()
-	await msg_del.delete()
 
 
 def remove_players_str(ctx, members, mem_add):
@@ -104,9 +89,9 @@ async def inhouse_start(ctx, players: int=10):
 	complete = False
 
 	while time.time() < timeout_start + timeout:
-		resp = f'There are {len(members)+len(mem_add)} selected for the inhouse. If you would like to add more players, react with the plus reaction. If you would like to remove players, react with the minus reaction. If you would like to continue, react with ok reaction.'
+		resp = f'There are {len(members)+len(mem_add)} selected for the inhouse. If you would like to add more players, react with plus sign. If you would like to remove players, react with the minus sign. If you would like to continue, react with :ok:. To quit, react with the :x:.'
 		msg_orig = await ctx.send(resp)
-		reactions = ['\U00002795', '\U00002796', '\U0001f197']
+		reactions = ['\U00002795', '\U00002796', '\U0001f197', '\U0000274c']
 		for reaction in reactions:
 			await msg_orig.add_reaction(emoji=reaction)
 		await asyncio.sleep(0.5)
@@ -139,9 +124,12 @@ async def inhouse_start(ctx, players: int=10):
 			complete = True
 			await msg_orig.delete()
 			break
-	if not complete:
-		await ctx.send("Timed out while adding/removing players from the teams. Please try again.")
-	else:
+		elif reac_name == 'CROSS MARK':
+			complete = False
+			await msg_orig.delete()
+			break
+
+	if complete:
 		mem_names = []
 		for member in members:
 			if member.nick:
@@ -153,9 +141,10 @@ async def inhouse_start(ctx, players: int=10):
 		while time.time() < timeout_start + timeout:
 			resp = randomizer(mem_names)
 			msg_orig = await ctx.send(resp)
-			reactions = ['\U0001f197', '\U0001f504']
+			reactions = ['\U0001f197', '\U0001f504', '\U0000274c']
 			for reaction in reactions:
 				await msg_orig.add_reaction(reaction)
+			await asyncio.sleep(0.5)
 			reaction, user = await bot.wait_for('reaction_add', timeout = 600.0)
 			reac_name = unicodedata.name(reaction.emoji)
 			if reac_name == 'SQUARED OK':
@@ -163,35 +152,40 @@ async def inhouse_start(ctx, players: int=10):
 			elif reac_name == 'ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS':
 				await msg_orig.delete()
 				continue
+			elif reac_name == 'CROSS MARK':
+				await msg_orig.delete()
+				exit = True
+				break
 
-	msg2 = await ctx.send('Teams confirmed! React with OK to move players to each channel.')
-	await msg2.add_reaction(emoji='\U0001f197')
-	await asyncio.sleep(0.5)
+		if not exit:
+			msg2 = await ctx.send('Teams confirmed! React with :ok: to move players to each channel.')
+			await msg2.add_reaction(emoji='\U0001f197')
+			await asyncio.sleep(0.5)
 
-	reaction, user = await bot.wait_for('reaction_add', timeout = 1200.0)
+			reaction, user = await bot.wait_for('reaction_add', timeout = 1200.0)
 
-	data = channel_usage.find_one({"_id": ctx.guild.id})
-	team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
-	team2ch = discord.utils.get(ctx.guild.channels, name=data["team2"])
+			data = channel_usage.find_one({"_id": ctx.guild.id})
+			team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
+			team2ch = discord.utils.get(ctx.guild.channels, name=data["team2"])
 
-	team1 = mem_names[0::2]
-	team2 = mem_names[1::2]
-	for member in members:
-		if member.name in team1:
-			await member.move_to(team1ch)
-		elif member.name in team2:
-			await member.move_to(team2ch)
+			team1 = mem_names[0::2]
+			team2 = mem_names[1::2]
+			for member in members:
+				if member.name in team1:
+					await member.move_to(team1ch)
+				elif member.name in team2:
+					await member.move_to(team2ch)
 
-	await msg2.delete()
-	await ctx.send('Players sent to each team channel! Good luck and have fun!')
+			await msg2.delete()
+			await ctx.send('Players sent to each team channel! Good luck and have fun!')
 
-	idquery = {"_id": ctx.guild.id}
-	if past_teams.find(idquery).count():
-		past_teams.deleteOne(idquery)
+			idquery = {"_id": ctx.guild.id}
+			if past_teams.find(idquery).count():
+				past_teams.deleteOne(idquery)
 
-	post = {"_id": ctx.guild.id, "mem_names": mem_names, "members": members}
+			post = {"_id": ctx.guild.id, "mem_names": mem_names, "members": members}
 
-	past_teams.insert_one(post)
+			past_teams.insert_one(post)
 
 @bot.command(name='endgame', help='Move people back to the lobby channel.')
 async def end_game(ctx):
@@ -203,6 +197,7 @@ async def end_game(ctx):
 		await member.move_to(lobbych)
 	for member in team2ch.members:
 		await member.move_to(lobbych)
+		
 
 @bot.command(name='setchannel', help='Set the default voice channels for the lobby and team channels.')
 async def set_channels(ctx, lobby: str, team1: str, team2: str):
