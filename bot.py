@@ -31,7 +31,7 @@ db = cluster["channel-usage"]
 channel_usage = db["channel-usage"]
 past_teams = db["past-teams"]
 
-bot = commands.Bot(command_prefix='&')
+bot = commands.Bot(command_prefix='!')
 
 
 def check(author):
