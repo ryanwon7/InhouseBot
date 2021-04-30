@@ -9,10 +9,11 @@ from dotenv import load_dotenv
 import pymongo
 from pymongo import MongoClient
 
-# TO DOs - add check to only let author/op use the !inhouse command after starting it
-# - add rematch feature
+# TO DOs 
+# - add check to only let author/op use the !inhouse command after starting it (done)
+# - add rematch feature (done)
 # - add team create feature
-# - add exit from current command feature
+# - add exit from current command feature (done)
 
 
 if 'DYNO' in os.environ:
@@ -33,12 +34,6 @@ past_teams = db["past-teams"]
 
 bot = commands.Bot(command_prefix='!')
 
-
-def check(author):
-	def inner_check(message):
-		return message.author == author
-
-
 def channels_exist(ctx, vc_list):
 	for i in range(0,3):
 		for channel in ctx.guild.voice_channels:
@@ -50,6 +45,9 @@ def channels_exist(ctx, vc_list):
 	else:
 		return 0
 
+def swap_list(member_list):
+	l = len(member_list)&~1
+	member_list[1:l:2],member_list[:l:2] = member_list[:l:2],member_list[1:l:2]
 
 def randomizer(mem_names):
 	random.shuffle(mem_names)
@@ -85,16 +83,31 @@ def remove_players_str(ctx, members, mem_add):
 		mem_str += str(count) + "  " + member + '\t '
 		count+=1
 
-	response = 'Please select which of the following members should be removed from the game by their numbers. For example, to remove players 4, 8, and 12 from the inhouse game, reply with \'4 8 12\' (without apostrophes).\n\n'
+	response = 'Please select which of the following members should be removed from the game by their numbers. For example, to remove players 4, 8, and 12 from the inhouse game, reply with *4 8 12* \n\n'
 	return response + mem_str
 
 
 @bot.command(name='inhouse', help='Starts an inhouse game with members in current channel. Default number of players is 10.')
 async def inhouse_start(ctx, players: int=10):
 	members = ctx.message.author.voice.channel.members
+	orig = ctx.message.author
 	mem_add = []
 	timeout_start = time.time()
 	complete = False
+
+	def check(msg):
+		if msg.author.id == orig.id:
+			return True
+		if msg.author.guild_permissions.administrator:
+			return True
+		return False
+
+	def checkr(reaction, user):
+		if user.id == orig.id:
+			return True
+		if user.guild_permissions.administrator:
+			return True
+		return False
 
 	while time.time() < timeout_start + timeout:
 		resp = f'There are {len(members)+len(mem_add)} selected for the inhouse. If you would like to add more players, react with plus sign. If you would like to remove players, react with the minus sign. If you would like to continue, react with :ok:. To quit, react with the :x:.'
@@ -103,13 +116,13 @@ async def inhouse_start(ctx, players: int=10):
 		for reaction in reactions:
 			await msg_orig.add_reaction(emoji=reaction)
 		await asyncio.sleep(0.5)
-		reaction, user = await bot.wait_for('reaction_add', timeout = 600)
+		reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 600)
 		reac_name = unicodedata.name(reaction.emoji)
 		if reac_name == 'HEAVY MINUS SIGN':
 			await msg_orig.delete()
 			resp = remove_players_str(ctx, members, mem_add)
 			msg1 = await ctx.send(resp)
-			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=600)
+			msg = await bot.wait_for('message', check=check, timeout=600)
 			resp_list = list(map(int, msg.content.split()))
 			resp_list.sort(reverse=True)
 			for idx in resp_list:
@@ -121,11 +134,11 @@ async def inhouse_start(ctx, players: int=10):
 			await msg1.delete()
 		elif reac_name == 'HEAVY PLUS SIGN':
 			await msg_orig.delete()
-			resp = "Please list the names of the players you would like to add. Since they are currently not connected to a voice channel, they will not be able to be moved to their team channel. For example, to add rwon and Elijah p, reply with \'rwon \"Elijah p\"\' (without apostrophes)\n"
+			resp = "Please list the names of the players you would like to add. Since they are currently not connected to a voice channel, they will not be able to be moved to their team channel. For example, to add Elijah p and rwon, reply with *Elijah p, rwon*\n"
 			msg1 = await ctx.send(resp)
-			msg = await bot.wait_for('message', check=check(ctx.message.author), timeout=600)
-			for user in msg.content.split():
-				mem_add.append(user)
+			msg = await bot.wait_for('message', check=check, timeout=600)
+			for user in msg.content.split(","):
+				mem_add.append(user.strip())
 			await msg.delete()
 			await msg1.delete()
 		elif reac_name == 'SQUARED OK':
@@ -153,7 +166,7 @@ async def inhouse_start(ctx, players: int=10):
 			for reaction in reactions:
 				await msg_orig.add_reaction(reaction)
 			await asyncio.sleep(0.5)
-			reaction, user = await bot.wait_for('reaction_add', timeout = 600.0)
+			reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 600.0)
 			reac_name = unicodedata.name(reaction.emoji)
 			if reac_name == 'SQUARED OK':
 				exit = False
@@ -171,18 +184,23 @@ async def inhouse_start(ctx, players: int=10):
 			await msg2.add_reaction(emoji='\U0001f197')
 			await asyncio.sleep(0.5)
 
-			reaction, user = await bot.wait_for('reaction_add', timeout = 1200.0)
+			reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 1200.0)
 
 			data = channel_usage.find_one({"_id": ctx.guild.id})
-			team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
-			team2ch = discord.utils.get(ctx.guild.channels, name=data["team2"])
+			team1ch = discord.utils.get(ctx.guild.channels, id=data["team1"])
+			team2ch = discord.utils.get(ctx.guild.channels, id=data["team2"])
 
 			team1 = mem_names[0::2]
 			team2 = mem_names[1::2]
+
+			team1_ids = []
+			team2_ids = []
 			for member in members:
 				if member.name in team1 or member.nick in team1:
+					team1_ids.append(member.id)
 					await member.move_to(team1ch)
 				elif member.name in team2 or member.nick in team2:
+					team2_ids.append(member.id)
 					await member.move_to(team2ch)
 
 			await msg2.delete()
@@ -190,47 +208,93 @@ async def inhouse_start(ctx, players: int=10):
 
 			idquery = {"_id": ctx.guild.id}
 			if past_teams.find(idquery).count():
-				past_teams.deleteOne(idquery)
+				past_teams.remove(idquery)
 
-			post = {"_id": ctx.guild.id, "mem_names": mem_names, "members": members}
+			post = {"_id": ctx.guild.id, "mem_names": mem_names, "team1_id": team1_ids, "team2_id": team2_ids}
 
 			past_teams.insert_one(post)
 
 @bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
 async def rematch(ctx):
+	orig = ctx.message.author
+	def checkr(reaction, user):
+		if user.id == orig.id:
+			return True
+		if user.guild_permissions.administrator:
+			return True
+		return False
+
 	idquery = {"_id": ctx.guild.id}
 	if past_teams.find(idquery).count():
-		data = past_teams.find_one()
+		data = past_teams.find_one(idquery)
 		mem_names = data["mem_names"]
-		members = data["members"]
+		team1_ids = data["team1_id"]
+		team2_ids = data["team2_id"]
 
 		data1 = channel_usage.find_one({"_id": ctx.guild.id})
-		team1ch = discord.utils.get(ctx.guild.channels, name=data1["team1"])
-		team2ch = discord.utils.get(ctx.guild.channels, name=data1["team2"])
-
-		for member in mem_names:
-			mem_str += member.ljust(25)
-			if count % 2 == 0:
-				mem_str += '\n'
-			count+=1
-		response = 'Here are the rematch teams. To confirm and move to channels, react with OK.\n'
+		team1ch = discord.utils.get(ctx.guild.channels, id=data1["team1"])
+		team2ch = discord.utils.get(ctx.guild.channels, id=data1["team2"])
 		
-		msg_orig = await ctx.send(resp)
-		await msg_orig.add_reaction(emoji='\U0001f504')
-		reaction, user = await bot.wait_for('reaction_add', timeout = 60.0)
-		reac_name = unicodedata.name(reaction.emoji)
-		if reac_name == 'SQUARED OK':
-			team1 = mem_names[0::2]
-			team2 = mem_names[1::2]
+		timeout_start = time.time()
+		swap = False
+		while time.time() < timeout_start + timeout:
+			mem_str1 = "\n**Team 1:** "
+			mem_str2 = "\n**Team 2:** "
+			count = 1
+			for member in mem_names:
+				if count % 2 == 0:
+					if count == 2:
+						mem_str2 += member
+					else:
+						mem_str2 += ", " + member
+				else:
+					if count == 1:
+						mem_str1 += member
+					else:
+						mem_str1 += ", " + member
+				count+=1
+			response = 'Here are the rematch teams. To confirm the teams, react with :ok:. To switch sides, react with :left_right_arrow:. To quit, react with :x:.\n'
+			
+			msg_orig = await ctx.send(response + mem_str1 + mem_str2)
+			reactions = ['\U0001f197', '\U00002194', '\U0000274c']
+			for reaction in reactions:
+				await msg_orig.add_reaction(reaction)
+			await asyncio.sleep(0.5)
+			reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 600.0)
+			reac_name = unicodedata.name(reaction.emoji)
+			if reac_name == 'SQUARED OK':
+				exit = False
+				break
+			elif reac_name == 'LEFT RIGHT ARROW':
+				swap_list(mem_names)
+				swap = not swap
+				await msg_orig.delete()
+				continue
+			elif reac_name == 'CROSS MARK':
+				await msg_orig.delete()
+				exit = True
+				break
 
-			for member in members:
-				if member.name in team1:
-					await member.move_to(team2ch)
-				elif member.name in team2:
-					await member.move_to(team1ch)
+		if not exit:
+			msg2 = await ctx.send('Teams confirmed! React with :ok: to move players to each channel.')
+			await msg2.add_reaction(emoji='\U0001f197')
+			await asyncio.sleep(0.5)
 
-			await ctx.send('Players sent to each team channel! Good luck and have fun!')
-	
+			reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 1200.0)
+
+			for mem_id in team1_ids:
+				if swap:
+					await ctx.guild.get_member(mem_id).move_to(team2ch)
+				else:
+					await ctx.guild.get_member(mem_id).move_to(team1ch)
+			for mem_id in team2_ids:
+				if swap:
+					await ctx.guild.get_member(mem_id).move_to(team1ch)
+				else:
+					await ctx.guild.get_member(mem_id).move_to(team2ch)
+
+			await msg2.delete()
+			await ctx.send('Players sent to each team channel! Good luck and have fun!')	
 	else:
 		await ctx.send("No games have been played using the InHouse Bot yet.")
 
@@ -238,9 +302,9 @@ async def rematch(ctx):
 @bot.command(name='endgame', help='Move people back to the lobby channel.')
 async def end_game(ctx):
 	data = channel_usage.find_one({"_id": ctx.guild.id})
-	lobbych = discord.utils.get(ctx.guild.channels, name=data["lobby"])
-	team1ch = discord.utils.get(ctx.guild.channels, name=data["team1"])
-	team2ch = discord.utils.get(ctx.guild.channels, name=data["team2"])
+	lobbych = discord.utils.get(ctx.guild.channels, id=data["lobby"])
+	team1ch = discord.utils.get(ctx.guild.channels, id=data["team1"])
+	team2ch = discord.utils.get(ctx.guild.channels, id=data["team2"])
 	for member in team1ch.members:
 		await member.move_to(lobbych)
 	for member in team2ch.members:
@@ -252,11 +316,11 @@ async def set_channels(ctx, lobby: str, team1: str, team2: str):
 	if channels_exist(ctx, [lobby, team1, team2]):
 		idquery = {"_id": ctx.guild.id}
 		if channel_usage.find(idquery).count():
-			newvalues = { "$set": {"lobby": lobby, "team1": team1, "team2": team2}}
+			newvalues = { "$set": {"lobby": discord.utils.get(ctx.guild.channels, name=lobby).id, "team1": discord.utils.get(ctx.guild.channels, name=team1).id, "team2": discord.utils.get(ctx.guild.channels, name=team2).id}}
 			channel_usage.update_one(idquery, newvalues)
 			await ctx.send("Channels were set previously. Updating existing records.")
 		else:
-			post = {"_id": ctx.guild.id, "lobby": lobby, "team1": team1, "team2": team2}
+			post = {"_id": ctx.guild.id, "lobby": discord.utils.get(ctx.guild.channels, name=lobby).id, "team1": discord.utils.get(ctx.guild.channels, name=team1).id, "team2": discord.utils.get(ctx.guild.channels, name=team2).id}
 			channel_usage.insert_one(post)
 			await ctx.send("Creating default channels for your server.")
 	else:
