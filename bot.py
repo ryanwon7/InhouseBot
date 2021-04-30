@@ -53,8 +53,8 @@ def channels_exist(ctx, vc_list):
 
 def randomizer(mem_names):
 	random.shuffle(mem_names)
-	mem_str1 = "\n**Team 1**: "
-	mem_str2 = "\n**Team 2**: "
+	mem_str1 = "\n**Team 1:** "
+	mem_str2 = "\n**Team 2:** "
 	count = 1
 	for member in mem_names:
 		if count % 2 == 0:
