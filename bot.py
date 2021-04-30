@@ -59,14 +59,14 @@ def randomizer(mem_names):
 	for member in mem_names:
 		if count % 2 == 0:
 			if count == 2:
-				mem_str1 += member + " "
+				mem_str1 += member
 			else:
-				mem_str1 += ", " + member + " "
+				mem_str1 += ", " + member
 		else:
 			if count == 1:
-				mem_str2 += member + " "
+				mem_str2 += member
 			else:
-				mem_str2 += ", " + member + " "
+				mem_str2 += ", " + member
 		count+=1
 	response = 'Here are randomized teams. To accept, react with :ok:. To re randomize, react with :arrows_counterclockwise:. To exit, react with :x:.\n'
 	return (response + mem_str1 + mem_str2)
