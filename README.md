@@ -18,27 +18,32 @@ The three required arguments for the !setchannel command are the names of the ch
 ### Inhouse Base Command
 To use the inhouse system, the first base command is !inhouse. The usage of the command is shown below:
 
-`!inhouse [players]`
+`!inhouse`
 
-The !inhouse command as an optional argument of the number of players that will take part in the game. The default number of players is ten, however at the moment having different number of players does not have any effect at all. In the future support will be added to change the structure of the command based on the number of players participating.
+The inhouse command will take all users from the voice channel of the user who sends the command, and will use these as the people who are playing in the inhouse game. To add players, use the "+" reaction. To remove players, use the "-" reaction. When adding players, you are only adding them by name for team selection - they will not be moved to team discord channel. Removing players will remove them from being added to a team. After accepting by clicking the "ok" reaction, the bot will show a randomized list of teams. To reshuffle, click the "reshuffle" reaction. To accept, click the "ok" reaction. Doing so will reach a confirmation message, and reacting "ok" to this message will move all users to the appropriate team channel.
 
-The command will take all users from the voice channel of the user who sends the command, and will use these as the people who are playing in the inhouse game. To add players, use the "+" reaction. To remove players, use the "-" reaction. When adding players, you are only adding them by name for team selection - they will not be moved to team discord channel. Removing players will remove them from being added to a team. After accepting by clicking the "ok" reaction, the bot will show a randomized list of teams. To reshuffle, click the "reshuffle" reaction. To accept, click the "ok" reaction. Doing so will reach a confirmation message, and reacting "ok" to this message will move all users to the appropriate team channel.
+At all message prompts, you can also quit at any time by reacting with the "X" reaction. Also note that the only people that can interact with the bot once it is summoned using the !inhouse command is the caller of the command and users with adminstrator privileges.
 
 ### End Game Command
 The end game command returns all players in both designated team channels to the channel designated as the lobby, regardless of whether they were included in the original inhouse teams. The usage is shown below:
 
 `!endgame`
 
+### Rematch Command
+The rematch command creates teams based off the last played game in the server. The usage is shown below:
+
+`!rematch`
+
+You will then have the option to accept, switch the sides of the teams, or quit. If accepting, clicking ok once more will move all players. At all message prompts, you can also quit at any time by reacting with the "X" reaction. Also note that the only people that can interact with the bot once it is summoned using the !rematch command is the caller of the command and users with adminstrator privileges.
+
 ## Known Bugs
 The following are the list of known bugs or incorrect functionality.
-* When adding players in the add part of !inhouse command, entering a user with a space in their name results in two different players being added
 * Currently do not have proper exception handling which can kill some commands.
+* Channel names with the :desktop: emoji in them cannot be set for inhouse channels.
+* Having an odd amount of players for a match, and then using the rematch function will not correctly create teams.
 
 If you find any bugs, please let me know by opening an issue on the Github page.
 
 ## Work in Progress
 The following commands and functionality are currently being developed:
-* Limit reactions to only the user who authored the original !inhouse command
-* Rematch command - load teams from the last generated set of teams
 * Create team command - use for instances when captains are picking teams, or teams are known beforehand and you want to preserve the voice channel movement feature
-* Exit from current command - letting a command timeout or simply starting a new command will exit the current command. Looking to build a cleaner way to exit the current command without raising exceptions.
