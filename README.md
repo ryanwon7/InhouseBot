@@ -3,7 +3,9 @@
 This is a bot to set up, manage, and run in house matches for any games in your Discord server. It can randomly create teams for you, and will move everyone to their team channel. 
 
 ## Directory Structure
-The bot.py script runs the Inhouse Discord bot. There is a hidden file, .env, which is not included in the GitHub repositiory, which has the information regarding the bot token as well as the MongoDB connection string.
+The bot.py script runs the Inhouse Discord bot. Config variables are stored in a local .env variable for local repositories of the bot, while the Heroku service has the database and discord bot token set in the config variables for Heroku.
+
+The Procfile, runtime.txt, and requirements.txt files are all files that are used for the running of the file in heroku. Procfile contains command for heroku to run the bot as a worker dyno, while runtime.txt contains the desired version of python to execute and requirements.txt contains the necessary non standard python libraries used.
 
 ## Usage
 ### Channel Set Command
@@ -30,6 +32,7 @@ The end game command returns all players in both designated team channels to the
 ## Known Bugs
 The following are the list of known bugs or incorrect functionality.
 * When adding players in the add part of !inhouse command, entering a user with a space in their name results in two different players being added
+* Currently do not have proper exception handling which can kill some commands.
 
 If you find any bugs, please let me know by opening an issue on the Github page.
 
