@@ -214,7 +214,7 @@ async def inhouse_start(ctx, players: int=10):
 
 			past_teams.insert_one(post)
 
-@bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
+@bot.command(name='rematch', help='Sets up a rematch between the last two generated teams.')
 async def rematch(ctx):
 	orig = ctx.message.author
 	def checkr(reaction, user):
