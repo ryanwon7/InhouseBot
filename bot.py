@@ -53,15 +53,23 @@ def channels_exist(ctx, vc_list):
 
 def randomizer(mem_names):
 	random.shuffle(mem_names)
-	mem_str = "Team 1".ljust(25) + "Team 2\n"
+	mem_str1 = "\n**Team 1**: "
+	mem_str2 = "\n**Team 2**: "
 	count = 1
 	for member in mem_names:
-		mem_str += member.ljust(25)
 		if count % 2 == 0:
-			mem_str += '\n'
+			if count == 2:
+				mem_str1 += member + " "
+			else:
+				mem_str1 += ", " + member + " "
+		else:
+			if count == 1:
+				mem_str2 += member + " "
+			else:
+				mem_str2 += ", " + member + " "
 		count+=1
 	response = 'Here are randomized teams. To accept, react with :ok:. To re randomize, react with :arrows_counterclockwise:. To exit, react with :x:.\n'
-	return (response + mem_str)
+	return (response + mem_str1 + mem_str2)
 
 
 def remove_players_str(ctx, members, mem_add):
@@ -77,7 +85,7 @@ def remove_players_str(ctx, members, mem_add):
 		mem_str += str(count) + "  " + member + '\t '
 		count+=1
 
-	response = 'Please select which of the following members should be removed from the game by their numbers. For example, to remove players 4, 8, and 12 from the inhouse game, reply with \'4 8 12\' (without apostrophes)\n\n'
+	response = 'Please select which of the following members should be removed from the game by their numbers. For example, to remove players 4, 8, and 12 from the inhouse game, reply with \'4 8 12\' (without apostrophes).\n\n'
 	return response + mem_str
 
 
@@ -148,6 +156,7 @@ async def inhouse_start(ctx, players: int=10):
 			reaction, user = await bot.wait_for('reaction_add', timeout = 600.0)
 			reac_name = unicodedata.name(reaction.emoji)
 			if reac_name == 'SQUARED OK':
+				exit = False
 				break
 			elif reac_name == 'ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS':
 				await msg_orig.delete()
@@ -171,21 +180,14 @@ async def inhouse_start(ctx, players: int=10):
 			team1 = mem_names[0::2]
 			team2 = mem_names[1::2]
 			for member in members:
-				if member.name in team1:
+				if member.name in team1 or member.nick in team1:
 					await member.move_to(team1ch)
-				elif member.name in team2:
+				elif member.name in team2 or member.nick in team2:
 					await member.move_to(team2ch)
 
 			await msg2.delete()
 			await ctx.send('Players sent to each team channel! Good luck and have fun!')
 
-			idquery = {"_id": ctx.guild.id}
-			if past_teams.find(idquery).count():
-				past_teams.deleteOne(idquery)
-
-			post = {"_id": ctx.guild.id, "mem_names": mem_names, "members": members}
-
-			past_teams.insert_one(post)
 
 @bot.command(name='endgame', help='Move people back to the lobby channel.')
 async def end_game(ctx):
@@ -197,7 +199,7 @@ async def end_game(ctx):
 		await member.move_to(lobbych)
 	for member in team2ch.members:
 		await member.move_to(lobbych)
-		
+
 
 @bot.command(name='setchannel', help='Set the default voice channels for the lobby and team channels.')
 async def set_channels(ctx, lobby: str, team1: str, team2: str):
@@ -213,45 +215,5 @@ async def set_channels(ctx, lobby: str, team1: str, team2: str):
 			await ctx.send("Creating default channels for your server.")
 	else:
 		await ctx.send("Invalid channel names provided.")
-
-
-@bot.command(name='runitback', help='Sets up a rematch between the last two generated teams.')
-async def rematch(ctx):
-	idquery = {"_id": ctx.guild.id}
-	if past_teams.find(idquery).count():
-		data = past_teams.find_one()
-		mem_names = data["mem_names"]
-		members = data["members"]
-
-		data1 = channel_usage.find_one({"_id": ctx.guild.id})
-		team1ch = discord.utils.get(ctx.guild.channels, name=data1["team1"])
-		team2ch = discord.utils.get(ctx.guild.channels, name=data1["team2"])
-
-		for member in mem_names:
-			mem_str += member.ljust(25)
-			if count % 2 == 0:
-				mem_str += '\n'
-			count+=1
-		response = 'Here are the rematch teams. To confirm and move to channels, react with OK.\n'
-		
-		msg_orig = await ctx.send(resp)
-		await msg_orig.add_reaction(emoji='\U0001f504')
-		reaction, user = await bot.wait_for('reaction_add', timeout = 60.0)
-		reac_name = unicodedata.name(reaction.emoji)
-		if reac_name == 'SQUARED OK':
-			team1 = mem_names[0::2]
-			team2 = mem_names[1::2]
-
-			for member in members:
-				if member.name in team1:
-					await member.move_to(team2ch)
-				elif member.name in team2:
-					await member.move_to(team1ch)
-
-			await ctx.send('Players sent to each team channel! Good luck and have fun!')
-	
-	else:
-		await ctx.send("No games have been played using the InHouse Bot yet.")
-
 
 bot.run(TOKEN)
