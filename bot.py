@@ -8,6 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import pymongo
 from pymongo import MongoClient
+from discord import ChannelType
 
 # TO DOs 
 # - add check to only let author/op use the !inhouse command after starting it (done)
@@ -33,6 +34,14 @@ channel_usage = db["channel-usage"]
 past_teams = db["past-teams"]
 
 bot = commands.Bot(command_prefix='!')
+
+def check_exist(server_id):
+	idquery = {"_id": server_id}
+	if channel_usage.find(idquery).count():
+		return True
+	else:
+		return False
+
 
 def channels_exist(ctx, vc_list):
 	for i in range(0,3):
@@ -89,6 +98,10 @@ def remove_players_str(ctx, members, mem_add):
 
 @bot.command(name='inhouse', help='Starts an inhouse game with members in current channel. Default number of players is 10.')
 async def inhouse_start(ctx, players: int=10):
+	if not check_exist(ctx.guild.id):
+		await ctx.send("Please run the !setchannel command first to confingure the channels for your server.")
+		return
+
 	members = ctx.message.author.voice.channel.members
 	orig = ctx.message.author
 	mem_add = []
@@ -216,6 +229,10 @@ async def inhouse_start(ctx, players: int=10):
 
 @bot.command(name='rematch', help='Sets up a rematch between the last two generated teams.')
 async def rematch(ctx):
+	if not check_exist(ctx.guild.id):
+		await ctx.send("Please run the !setchannel command first to confingure the channels for your server.")
+		return
+
 	orig = ctx.message.author
 	def checkr(reaction, user):
 		if user.id == orig.id:
@@ -301,6 +318,10 @@ async def rematch(ctx):
 
 @bot.command(name='endgame', help='Move people back to the lobby channel.')
 async def end_game(ctx):
+	if not check_exist(ctx.guild.id):
+		await ctx.send("Please run the !setchannel command first to confingure the channels for your server.")
+		return
+
 	data = channel_usage.find_one({"_id": ctx.guild.id})
 	lobbych = discord.utils.get(ctx.guild.channels, id=data["lobby"])
 	team1ch = discord.utils.get(ctx.guild.channels, id=data["team1"])
@@ -310,20 +331,93 @@ async def end_game(ctx):
 	for member in team2ch.members:
 		await member.move_to(lobbych)
 
-
 @bot.command(name='setchannel', help='Set the default voice channels for the lobby and team channels.')
-async def set_channels(ctx, lobby: str, team1: str, team2: str):
-	if channels_exist(ctx, [lobby, team1, team2]):
-		idquery = {"_id": ctx.guild.id}
-		if channel_usage.find(idquery).count():
-			newvalues = { "$set": {"lobby": discord.utils.get(ctx.guild.channels, name=lobby).id, "team1": discord.utils.get(ctx.guild.channels, name=team1).id, "team2": discord.utils.get(ctx.guild.channels, name=team2).id}}
-			channel_usage.update_one(idquery, newvalues)
-			await ctx.send("Channels were set previously. Updating existing records.")
-		else:
-			post = {"_id": ctx.guild.id, "lobby": discord.utils.get(ctx.guild.channels, name=lobby).id, "team1": discord.utils.get(ctx.guild.channels, name=team1).id, "team2": discord.utils.get(ctx.guild.channels, name=team2).id}
-			channel_usage.insert_one(post)
-			await ctx.send("Creating default channels for your server.")
+async def set_channels(ctx):
+	orig = ctx.message.author
+	def checkr(reaction, user):
+		if user.id == orig.id:
+			return True
+		if user.guild_permissions.administrator:
+			return True
+		return False
+
+	timeout_start = time.time()
+	l = list((c.name for c in ctx.guild.channels if c.type==ChannelType.voice))
+	ch_list = [l[i:i + 10] for i in range(0, len(l), 10)] 
+	reactions = ['\u0031\ufe0f\u20e3', '\u0032\ufe0f\u20e3', '\u0033\ufe0f\u20e3', '\u0034\ufe0f\u20e3', '\u0035\ufe0f\u20e3', '\u0036\ufe0f\u20e3', '\u0037\ufe0f\u20e3', '\u0038\ufe0f\u20e3', '\u0039\ufe0f\u20e3', '\U0001f51f']
+	selected = []
+
+	for i in range(1,4):
+		index = 0
+		if i == 1 :
+			msg1_pre = await ctx.send("Please select the number of the voice channel you would like to set as your lobby. This is where players will be returned to after games are ended. To view more channels if there are multiple pages, click :track_next:. To go back, click :track_previous:.")
+		if i == 2:
+			msg1_pre = await ctx.send("Now, please select the number of the voice channel you would like to set as your team 1 channel. This is where players in team 1 will be placed during games. To view more channels if there are multiple pages, click :track_next:. To go back, click :track_previous:.")
+		if i == 3:
+			msg1_pre = await ctx.send("Finally, please select the number of the voice channel you would like to set as your team 2 channel. This is where players in team 2 will be placed during games. To view more channels if there are multiple pages, click :track_next:. To go back, click :track_previous:.")
+		while time.time() < timeout_start + timeout:
+			curr_list = ch_list[index]
+
+			empt = "\n"
+			for idx, ch in enumerate(curr_list):
+				empt += str(idx+1) + ') ' + ch + '\n'
+
+			msg1 = await ctx.send(empt)
+			
+			for reaction in reactions[0:len(curr_list)]:
+				await msg1.add_reaction(reaction)
+			if index != 0:
+				await msg1.add_reaction('\U000023ee')
+			if index < len(ch_list) - 1:
+				await msg1.add_reaction('\U000023ed')
+			await asyncio.sleep(1.0)
+
+			reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 600.0)
+
+			try:
+				reac_name = unicodedata.name(reaction.emoji)
+				if reac_name == "BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR":
+					await msg1.delete()
+					index += 1
+					continue
+				elif reac_name == "BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR":
+					await msg1.delete()
+					index -= 1
+					continue
+			except:
+				chosen = reactions.index(reaction.emoji)
+				await msg1.delete()
+				await msg1_pre.delete()
+				selected.append(curr_list[chosen])
+				break
+
+	idquery = {"_id": ctx.guild.id}
+	if channel_usage.find(idquery).count():
+		newvalues = { "$set": {"lobby": discord.utils.get(ctx.guild.channels, name=selected[0]).id, "team1": discord.utils.get(ctx.guild.channels, name=selected[1]).id, "team2": discord.utils.get(ctx.guild.channels, name=selected[2]).id}}
+		channel_usage.update_one(idquery, newvalues)
+		await ctx.send("The Lobby Voice Channel is now set to " + selected[0] + ". The Team 1 Voice Channel is now set to " + selected[1] + ". The Team 2 Voice Channel is now set to " + selected[2] + "." + "\nChannels were set previously. Updating existing records.")
 	else:
-		await ctx.send("Invalid channel names provided.")
+		post = {"_id": ctx.guild.id, "lobby": discord.utils.get(ctx.guild.channels, name=selected[0]).id, "team1": discord.utils.get(ctx.guild.channels, name=selected[1]).id, "team2": discord.utils.get(ctx.guild.channels, name=selected[2]).id}
+		channel_usage.insert_one(post)
+		await ctx.send("The Lobby Voice Channel is now set to " + selected[0] + ". The Team 1 Voice Channel is now set to " + selected[1] + ". The Team 2 Voice Channel is now set to " + selected[2] + "." + "\nCreating default channels for your server.")
 
 bot.run(TOKEN)
+
+@setchannel.error
+async def setchannel_error(self, error, ctx):
+	if isinstance(error, commands.MissingPermissions):
+		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+
+@inhouse.error
+async def inhouse_error(self, error, ctx):
+	if isinstance(error, commands.MissingPermissions):
+		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+
+@endgame.error
+async def endgame_error(self, error, ctx):
+	if isinstance(error, commands.MissingPermissions):
+		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+@rematch.error
+async def rematch_error(self, error, ctx):
+	if isinstance(error, commands.MissingPermissions):
+		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
