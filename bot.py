@@ -343,7 +343,6 @@ async def set_channels(ctx):
 			return True
 		if user.guild_permissions.administrator:
 			return True
-		await ctx.send('You must be an administrator to run this command.')
 		return False
 
 	timeout_start = time.time()
