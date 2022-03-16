@@ -407,6 +407,14 @@ async def set_channels(ctx):
 
 @bot.command(name='valmap', help='Pick a random map for Valorant.')
 async def valorant_map(ctx):
+	orig = ctx.message.author
+	def checkr(reaction, user):
+		if user.id == orig.id:
+			return True
+		if user.guild_permissions.administrator:
+			return True
+		return False
+
 	maps = ["Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Split"]
 
 	timeout_start = time.time()
@@ -415,15 +423,15 @@ async def valorant_map(ctx):
 		mapnum = random.randint(0, 6)
 		msg_orig = await ctx.send("Selected Map: " + maps[mapnum])
 
-		reactions = ['\U0001f197', '\U00002194']
+		reactions = ['\U0001f197', '\U0001f504']
 		for reaction in reactions:
 			await msg_orig.add_reaction(reaction)
 		await asyncio.sleep(0.5)
-		reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 600.0)
+		reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 500.0)
 		reac_name = unicodedata.name(reaction.emoji)
 		if reac_name == 'SQUARED OK':
 			break
-		elif reac_name == 'LEFT RIGHT ARROW':
+		elif reac_name == 'ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS':
 			await msg_orig.delete()
 			continue
 
