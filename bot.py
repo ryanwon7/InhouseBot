@@ -413,7 +413,7 @@ async def valorant_map(ctx):
 	timing = 600
 	while time.time() < timeout_start + timeout:
 		mapnum = random.randint(0, 6)
-		await ctx.send("Selected Map: " + maps[mapnum])
+		msg_orig = await ctx.send("Selected Map: " + maps[mapnum])
 
 		reactions = ['\U0001f197', '\U00002194']
 		for reaction in reactions:
