@@ -36,6 +36,13 @@ The rematch command creates teams based off the last played game in the server. 
 
 You will then have the option to accept, switch the sides of the teams, or quit. If accepting, clicking ok once more will move all players. At all message prompts, you can also quit at any time by reacting with the "X" reaction. Also note that the only people that can interact with the bot once it is summoned using the !rematch command is the caller of the command and users with adminstrator privileges.
 
+### Valorant Map Command
+The valmap command will pick a random valorant map from the current pool of seven (Ascent, Bind, Breeze, Fracture, Haven, Icebox, Split).
+
+`!valmap`
+
+You can click ok or ignore the bot's selection if you are satifised with the map. If you would like to reroll the map, you can click the reroll button.
+
 ## Known Bugs
 The following are the list of known bugs or incorrect functionality.
 * Currently do not have proper exception handling which can kill some commands.

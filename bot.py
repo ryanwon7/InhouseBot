@@ -108,6 +108,10 @@ async def inhouse_start(ctx, players: int=10):
 	timeout_start = time.time()
 	complete = False
 
+	if (len(members) == 0):
+		await ctx.send("You must be in a voice channel to run this command.")
+		return
+
 	def check(msg):
 		if msg.author.id == orig.id:
 			return True
@@ -339,6 +343,7 @@ async def set_channels(ctx):
 			return True
 		if user.guild_permissions.administrator:
 			return True
+		await ctx.send('You must be an administrator to run this command.')
 		return False
 
 	timeout_start = time.time()
@@ -400,6 +405,28 @@ async def set_channels(ctx):
 		post = {"_id": ctx.guild.id, "lobby": discord.utils.get(ctx.guild.channels, name=selected[0]).id, "team1": discord.utils.get(ctx.guild.channels, name=selected[1]).id, "team2": discord.utils.get(ctx.guild.channels, name=selected[2]).id}
 		channel_usage.insert_one(post)
 		await ctx.send("The Lobby Voice Channel is now set to " + selected[0] + ". The Team 1 Voice Channel is now set to " + selected[1] + ". The Team 2 Voice Channel is now set to " + selected[2] + "." + "\nCreating default channels for your server.")
+
+@bot.command(name='valmap', help='Pick a random map for Valorant.')
+async def valorant_map(ctx):
+	maps = ["Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Split"]
+
+	timeout_start = time.time()
+	timing = 600
+	while time.time() < timeout_start + timeout:
+		mapnum = random.randint(0, 6)
+		await.ctx.send("Selected Map: " + maps[mapnum])
+
+		reactions = ['\U0001f197', '\U00002194']
+		for reaction in reactions:
+			await msg_orig.add_reaction(reaction)
+		await asyncio.sleep(0.5)
+		reaction, user = await bot.wait_for('reaction_add', check=checkr, timeout = 600.0)
+		reac_name = unicodedata.name(reaction.emoji)
+		if reac_name == 'SQUARED OK':
+			break
+		elif reac_name == 'LEFT RIGHT ARROW':
+			await msg_orig.delete()
+			continue
 
 bot.run(TOKEN)
 
