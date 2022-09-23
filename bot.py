@@ -15,7 +15,7 @@ from discord import ChannelType
 # - add rematch feature (done)
 # - add team create feature
 # - add exit from current command feature (done)
-
+intents = discord.Intents(messages=True, reactions=True, members=True)
 
 if 'DYNO' in os.environ:
 	TOKEN = os.environ['DISCORD_TOKEN']
