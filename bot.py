@@ -437,21 +437,21 @@ async def valorant_map(ctx):
 
 bot.run(TOKEN)
 
-@setchannel.error
-async def setchannel_error(self, error, ctx):
-	if isinstance(error, commands.MissingPermissions):
-		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
-
-@inhouse.error
-async def inhouse_error(self, error, ctx):
-	if isinstance(error, commands.MissingPermissions):
-		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
-
-@endgame.error
-async def endgame_error(self, error, ctx):
-	if isinstance(error, commands.MissingPermissions):
-		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
-@rematch.error
-async def rematch_error(self, error, ctx):
-	if isinstance(error, commands.MissingPermissions):
-		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+#@setchannel.error
+#async def setchannel_error(self, error, ctx):
+#	if isinstance(error, commands.MissingPermissions):
+#		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+#
+#@inhouse.error
+#async def inhouse_error(self, error, ctx):
+#	if isinstance(error, commands.MissingPermissions):
+#		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+#
+#@endgame.error
+#async def endgame_error(self, error, ctx):
+#	if isinstance(error, commands.MissingPermissions):
+#		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
+#@rematch.error
+#async def rematch_error(self, error, ctx):
+#	if isinstance(error, commands.MissingPermissions):
+#		await ctx.send(":redTick: You don't have permission to run this command. Please give all the necessary permissions to the bot when adding it to the server.")
