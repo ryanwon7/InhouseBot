@@ -10,12 +10,9 @@ import pymongo
 from pymongo import MongoClient
 from discord import ChannelType
 
-# TO DOs 
-# - add check to only let author/op use the !inhouse command after starting it (done)
-# - add rematch feature (done)
-# - add team create feature
-# - add exit from current command feature (done)
-intents = discord.Intents(messages=True, reactions=True, members=True)
+## INTENTS
+intents = discord.Intents.default()
+intents.members = True # Privileged Intent
 
 if 'DYNO' in os.environ:
 	TOKEN = os.environ['DISCORD_TOKEN']
@@ -28,31 +25,12 @@ else:
 
 cluster = MongoClient(DATABASE)
 
-timeout = 2400 #seconds
+timeout = 14400 #seconds
 db = cluster["channel-usage"]
 channel_usage = db["channel-usage"]
 past_teams = db["past-teams"]
 
-bot = commands.Bot(command_prefix='!')
-
-def check_exist(server_id):
-	idquery = {"_id": server_id}
-	if channel_usage.find(idquery).count():
-		return True
-	else:
-		return False
-
-
-def channels_exist(ctx, vc_list):
-	for i in range(0,3):
-		for channel in ctx.guild.voice_channels:
-			if vc_list[i] == channel.name:
-				vc_list[i] = None
-				continue
-	if vc_list[0] == None and vc_list[1] == None and vc_list[2] == None:
-		return 1
-	else:
-		return 0
+bot = discord.Bot()
 
 def swap_list(member_list):
 	l = len(member_list)&~1
@@ -96,12 +74,12 @@ def remove_players_str(ctx, members, mem_add):
 	return response + mem_str
 
 
-@bot.command(name='inhouse', help='Starts an inhouse game with members in current channel. Default number of players is 10.')
-async def inhouse_start(ctx, players: int=10):
-	if not check_exist(ctx.guild.id):
-		await ctx.send("Please run the !setchannel command first to confingure the channels for your server.")
-		return
-
+@bot.slash_command(description='Starts an inhouse lobby with the members in current voice channel.')
+@option("game_number", description="The Game Lobby Number (Leave blank or enter 1 if multiple lobbies are not being made at once)", min_value=1, max_value=10, default=1)
+async def inhouse(
+	ctx: discord.ApplicationContext,
+	game_number: int,
+):
 	members = ctx.message.author.voice.channel.members
 	orig = ctx.message.author
 	mem_add = []
