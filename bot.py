@@ -26,9 +26,8 @@ else:
 cluster = MongoClient(DATABASE)
 
 timeout = 14400 #seconds
-db = cluster["channel-usage"]
-channel_usage = db["channel-usage"]
-past_teams = db["past-teams"]
+db = cluster["inhouse-bot"]
+game_list = db["lobby-games"]
 
 bot = discord.Bot()
 
@@ -76,13 +75,14 @@ def remove_players_str(ctx, members, mem_add):
 
 @bot.slash_command(description='Starts an inhouse lobby with the members in current voice channel.')
 @option("game_number", description="The Game Lobby Number (Leave blank or enter 1 if multiple lobbies are not being made at once)", min_value=1, max_value=10, default=1)
+@option("game_mode", description="Set the type of game this inhouse will be. Optional, can set as league or valorant.", options=["league", "valorant", "none"], default="none")
 async def inhouse(
 	ctx: discord.ApplicationContext,
 	game_number: int,
+	game_mode: string,
 ):
 	members = ctx.message.author.voice.channel.members
 	orig = ctx.message.author
-	mem_add = []
 	timeout_start = time.time()
 	complete = False
 
@@ -105,7 +105,7 @@ async def inhouse(
 		return False
 
 	while time.time() < timeout_start + timeout:
-		resp = f'There are {len(members)+len(mem_add)} selected for the inhouse. If you would like to add more players, react with plus sign. If you would like to remove players, react with the minus sign. If you would like to continue, react with :ok:. To quit, react with the :x:.'
+		resp = f'There are currently {len(members)} in the channel who are selected for the inhouse. To add more players, use the /add_players slash command. To remove players, use the /remove_players slash command. Once you are ready to continue, react with :ok:. To quit, react with the :x:.'
 		msg_orig = await ctx.send(resp)
 		reactions = ['\U00002795', '\U00002796', '\U0001f197', '\U0000274c']
 		for reaction in reactions:
@@ -208,6 +208,27 @@ async def inhouse(
 			post = {"_id": ctx.guild.id, "mem_names": mem_names, "team1_id": team1_ids, "team2_id": team2_ids}
 
 			past_teams.insert_one(post)
+
+@bot.slash_command(description='Adds players to a pending inhouse lobby.')
+@option("game_number", description="The Game Lobby Number (Leave blank or enter 1 if multiple lobbies are not being made at once)", min_value=1, max_value=10, default=1)
+@option() #enter the playesr to add here
+async def add_players(
+	ctx: discord.ApplicationContext,
+	game_number: int,
+
+	):
+	bot stuff here;
+
+@bot.slash_command(description='Removes players from a pending inhouse lobby.')
+@option("game_number", description="The Game Lobby Number (Leave blank or enter 1 if multiple lobbies are not being made at once)", min_value=1, max_value=10, default=1)
+@option() #enter the playesr to add here
+async def remove_players(
+	ctx: discord.ApplicationContext,
+	game_number: int,
+
+	):
+	bot stuff here;
+
 
 @bot.command(name='rematch', help='Sets up a rematch between the last two generated teams.')
 async def rematch(ctx):
