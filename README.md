@@ -12,37 +12,37 @@ To use the inhouse system, the slash command is /inhouse. The usage of the comma
 
 `/inhouse`
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse1.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse1.gif)
 
 With the inhouse slash command, you can optionally choose the game mode as either League or Valorant. Choosing either one gives minor cosmetic and text changes, and choosing Valorant allows you to choose a random map as well. You can also run the command without the game mode option, as shown below.
 
-![](https://github.com/InhouseBot/production/resources/inhouse2.png)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse2.png)
 
 ##### Add or Remove Players
 You can add players to the inhouse game lobby by clicking the Add Player button. Please note that adding player will only add them to the team creation, but will not move them to the voice channels.
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse3.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse3.gif)
 
 To Remove a player from the inhouse game lobby, click Remove Player.
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse4.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse4.gif)
 
 ##### Game Creation
 Upon clicking continue, you will be presented with teams as well as a map choice if you set the gamemode to Valorant. 
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse5.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse5.gif)
 
 From here, you can click reroll teams to either re-randomize the teams, or click Reroll Map if the gamemode is Valorant to change the map. Once everything is finished, you can click Continue. This will show a confirmation screen as seen below.
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse6.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse6.gif)
 
 From here, you can also click Previous to go back to change any of the settings. Click Starting Game will create channels and move existing players to them, as shown below.
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse7.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse7.gif)
 
 Finally, once the game is completed and everyone should return to the original discord channel, click the End Game button.
 
-![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse8.gif)
+![](https://github.com/ryanwon7/InhouseBot/blob/production/resources/inhouse8.gif)
 
 At any time to exit the bot, click Quit.
 
