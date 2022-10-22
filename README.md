@@ -3,54 +3,58 @@
 This is a bot to set up, manage, and run in house matches for any games in your Discord server. It can randomly create teams for you, and will move everyone to their team channel. 
 
 ## Directory Structure
-The bot.py script runs the Inhouse Discord bot. Config variables are stored in a local .env variable for local repositories of the bot, while the Heroku service has the database and discord bot token set in the config variables for Heroku.
+The inhouse_bot.py script runs the Inhouse Discord bot. Config variables are stored in a local .env variable for local run environment of the bot, which is hosted on a private Raspberry Pi Server.
 
-The Procfile, runtime.txt, and requirements.txt files are all files that are used for the running of the file in heroku. Procfile contains command for heroku to run the bot as a worker dyno, while runtime.txt contains the desired version of python to execute and requirements.txt contains the necessary non standard python libraries used.
 
 ## Usage
-### Channel Set Command
-The first command you should run before using the bot is the !setchannel command. The following is the usecase for the !setchannel command.
+### Inhouse Slash Command
+To use the inhouse system, the slash command is /inhouse. The usage of the command is shown below:
 
-`!setchannel <lobby-name> <team1-name> <team2-name>`
+`/inhouse`
 
-The three required arguments for the !setchannel command are the names of the channels for the Lobby channel, Team 1 channel, and Team 2 channel. The other commands will not function if the channels have not been set with the !setchannel command, so this command must be properly run first.
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse1.gif)
 
-### Inhouse Base Command
-To use the inhouse system, the first base command is !inhouse. The usage of the command is shown below:
+With the inhouse slash command, you can optionally choose the game mode as either League or Valorant. Choosing either one gives minor cosmetic and text changes, and choosing Valorant allows you to choose a random map as well. You can also run the command without the game mode option, as shown below.
 
-`!inhouse`
+![](https://github.com/InhouseBot/production/resources/inhouse2.png)
 
-The inhouse command will take all users from the voice channel of the user who sends the command, and will use these as the people who are playing in the inhouse game. To add players, use the "+" reaction. To remove players, use the "-" reaction. When adding players, you are only adding them by name for team selection - they will not be moved to team discord channel. Removing players will remove them from being added to a team. After accepting by clicking the "ok" reaction, the bot will show a randomized list of teams. To reshuffle, click the "reshuffle" reaction. To accept, click the "ok" reaction. Doing so will reach a confirmation message, and reacting "ok" to this message will move all users to the appropriate team channel.
+##### Add or Remove Players
+You can add players to the inhouse game lobby by clicking the Add Player button. Please note that adding player will only add them to the team creation, but will not move them to the voice channels.
 
-At all message prompts, you can also quit at any time by reacting with the "X" reaction. Also note that the only people that can interact with the bot once it is summoned using the !inhouse command is the caller of the command and users with adminstrator privileges.
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse3.gif)
 
-### End Game Command
-The end game command returns all players in both designated team channels to the channel designated as the lobby, regardless of whether they were included in the original inhouse teams. The usage is shown below:
+To Remove a player from the inhouse game lobby, click Remove Player.
 
-`!endgame`
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse4.gif)
 
-### Rematch Command
-The rematch command creates teams based off the last played game in the server. The usage is shown below:
+##### Game Creation
+Upon clicking continue, you will be presented with teams as well as a map choice if you set the gamemode to Valorant. 
 
-`!rematch`
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse5.gif)
 
-You will then have the option to accept, switch the sides of the teams, or quit. If accepting, clicking ok once more will move all players. At all message prompts, you can also quit at any time by reacting with the "X" reaction. Also note that the only people that can interact with the bot once it is summoned using the !rematch command is the caller of the command and users with adminstrator privileges.
+From here, you can click reroll teams to either re-randomize the teams, or click Reroll Map if the gamemode is Valorant to change the map. Once everything is finished, you can click Continue. This will show a confirmation screen as seen below.
 
-### Valorant Map Command
-The valmap command will pick a random valorant map from the current pool of seven (Ascent, Bind, Breeze, Fracture, Haven, Icebox, Split).
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse6.gif)
 
-`!valmap`
+From here, you can also click Previous to go back to change any of the settings. Click Starting Game will create channels and move existing players to them, as shown below.
 
-You can click ok or ignore the bot's selection if you are satifised with the map. If you would like to reroll the map, you can click the reroll button.
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse7.gif)
+
+Finally, once the game is completed and everyone should return to the original discord channel, click the End Game button.
+
+![](https://github.com/InhouseBot/blob/production/resourcesresources/inhouse8.gif)
+
+At any time to exit the bot, click Quit.
 
 ## Known Bugs
 The following are the list of known bugs or incorrect functionality.
 * Currently do not have proper exception handling which can kill some commands.
-* Channel names with the :desktop: emoji in them cannot be set for inhouse channels.
-* Having an odd amount of players for a match, and then using the rematch function will not correctly create teams.
+* Occasionally rerolling a map in Valorant gamemode will return the same map.
+* The Slash command will sometimes display ("Command Failed") even though the interaction is continuing.
 
 If you find any bugs, please let me know by opening an issue on the Github page.
 
 ## Work in Progress
 The following commands and functionality are currently being developed:
 * Create team command - use for instances when captains are picking teams, or teams are known beforehand and you want to preserve the voice channel movement feature
+* Spanish Language Support
