@@ -2,13 +2,10 @@ import os
 import discord
 import time
 import random
-import unicodedata
 import asyncio
-from discord.ext import commands
 from dotenv import load_dotenv
-import pymongo
-from pymongo import MongoClient
-from discord import ChannelType
+#import pymongo
+#from pymongo import MongoClient
 
 ## INTENTS
 intents = discord.Intents.default()
@@ -176,14 +173,20 @@ class LoadingButtons(discord.ui.View):
 	@discord.ui.button(label="Start Game", style=discord.ButtonStyle.success)
 	async def continue_button_callback(self, button, interaction):
 		guild = interaction.guild
-		category = await guild.create_category("Inhouse Game Lobby")
-		textchat = await guild.create_text_channel("inhouse-chat", category=category)
-		if self.gamemode == 1:
-			team1ch = await guild.create_voice_channel("Blue Side", category=category)
-			team2ch = await guild.create_voice_channel("Red Side", category=category)
-		else:
-			team1ch = await guild.create_voice_channel("Team 1", category=category)
-			team2ch = await guild.create_voice_channel("Team 2", category=category)
+		try:
+			category = await guild.create_category("Inhouse Game Lobby")
+			textchat = await guild.create_text_channel("inhouse-chat", category=category)
+			if self.gamemode == 1:
+				team1ch = await guild.create_voice_channel("Blue Side", category=category)
+				team2ch = await guild.create_voice_channel("Red Side", category=category)
+			else:
+				team1ch = await guild.create_voice_channel("Team 1", category=category)
+				team2ch = await guild.create_voice_channel("Team 2", category=category)
+		except:
+			for child in self.children:
+				child.disabled = True
+			await interaction.response.edit_message(content="The Bot needs the Manage Channel Permission. Please reinvite the bot and ensure it receives the proper permissions.", view=self)
+			return
 
 		team1 = self.mem_names[0::2]
 		team2 = self.mem_names[1::2]
