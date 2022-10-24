@@ -383,7 +383,7 @@ class StartMenuButtons(discord.ui.View):
 	async def quit_button_callback(self, button, interaction):
 		for child in self.children:
 			child.disabled = True
-		await interaction.response.edit_message(content="GG!")
+		await interaction.response.edit_message(content="GG!", view=self)
 
 @bot.slash_command(description='Starts an inhouse lobby with the members in current voice channel.')
 @discord.commands.option("game_mode", description="Set the type of game this inhouse will be. Optional, can set as league or valorant.", choices=games, default="none")
