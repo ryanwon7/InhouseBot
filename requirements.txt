@@ -1,4 +1,0 @@
-py-cord
-python-dotenv
-pymongo
-dnspython
