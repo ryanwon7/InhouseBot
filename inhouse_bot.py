@@ -6,13 +6,6 @@ import asyncio
 from dotenv import load_dotenv
 #import pymongo
 #from pymongo import MongoClient
-import logging
-
-logging.basicConfig(filename='/tmp/inhouse.log', level=logging.DEBUG, 
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
-logger=logging.getLogger(__name__)
-
-logging = 0
 
 ## INTENTS
 intents = discord.Intents.default()
@@ -85,33 +78,33 @@ class GameEndButtons(discord.ui.View):
 			try:
 				await member.move_to(self.lobby)
 			except Exception as err:
-				if logging == 1: logger.error(err)
+				print(err)
 				continue
 		for member in self.v2.members:
 			try:
 				await member.move_to(self.lobby)
 			except Exception as err:
-				if logging == 1: logger.error(err)
+				print(err)
 				continue
 		try:
 			await self.text.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		try:
 			await self.v1.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		try:
 			await self.v2.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		try:
 			await self.cat.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		button.disabled = True # set button.disabled to True to disable the button
 		button.label = "Game Completed" # change the button's label to something else
@@ -123,33 +116,33 @@ class GameEndButtons(discord.ui.View):
 			try:
 				await member.move_to(self.lobby)
 			except Exception as err:
-				if logging == 1: logger.error(err)
+				print(err)
 				continue
 		for member in self.v2.members:
 			try:
 				await member.move_to(self.lobby)
 			except Exception as err:
-				if logging == 1: logger.error(err)
+				print(err)
 				continue
 		try:
 			await self.text.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		try:
 			await self.v1.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		try:
 			await self.v2.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		try:
 			await self.cat.delete()
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 
 		button.disabled = True # set button.disabled to True to disable the button
 		button.label = "Game Completed" # change the button's label to something else
@@ -183,7 +176,7 @@ class LoadingButtonsVal(discord.ui.View):
 			team1ch = await guild.create_voice_channel("Team 1", category=category)
 			team2ch = await guild.create_voice_channel("Team 2", category=category)
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 			for child in self.children:
 				child.disabled = True
 			await interaction.response.edit_message(content="The Bot needs the Manage Channel Permission. Please reinvite the bot and ensure it receives the proper permissions.", view=self)
@@ -198,13 +191,13 @@ class LoadingButtonsVal(discord.ui.View):
 				try:
 					await member.move_to(team1ch)
 				except Exception as err:
-					if logging == 1: logger.error(err)
+					print(err)
 					continue
 			elif member.name in team2 or member.nick in team2:
 				try:		
 					await member.move_to(team2ch)
 				except Exception as err:
-					if logging == 1: logger.error(err)
+					print(err)
 					continue
 		await interaction.response.edit_message(content="The game has been started and each team has moved to their own discord channel! To end the game and return everyone to the original chat, click **End Game**.", view=GameEndButtons(self.caller, self.lobby, category, textchat, team1ch, team2ch, timeout=10800)) # Go to next part
 
@@ -249,7 +242,7 @@ class LoadingButtons(discord.ui.View):
 				team1ch = await guild.create_voice_channel("Team 1", category=category)
 				team2ch = await guild.create_voice_channel("Team 2", category=category)
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 			for child in self.children:
 				child.disabled = True
 			await interaction.response.edit_message(content="The Bot needs the Manage Channel Permission. Please reinvite the bot and ensure it receives the proper permissions.", view=self)
@@ -264,13 +257,13 @@ class LoadingButtons(discord.ui.View):
 				try:
 					await member.move_to(team1ch)
 				except Exception as err:
-					if logging == 1: logger.error(err)
+					print(err)
 					continue
 			elif member.name in team2 or member.nick in team2:
 				try:		
 					await member.move_to(team2ch)
 				except Exception as err:
-					if logging == 1: logger.error(err)
+					print(err)
 					continue
 		await interaction.response.edit_message(content="The game has been started and each team has moved to their own discord channel! To end the game and return everyone to the original chat, click **End Game**.", view=GameEndButtons(self.caller, self.lobby, category, textchat, team1ch, team2ch, timeout=10800)) # Go to next part
 
@@ -431,7 +424,7 @@ class StartMenuButtons(discord.ui.View):
 		try:
 			await self.message.edit(content="Command Timed Out.", view=self) # Go to next part
 		except Exception as err:
-			if logging == 1: logger.error(err)
+			print(err)
 			print("Timed out on exception in StartMenuButtons, couldnt edit")
 
 	@discord.ui.button(label="Continue", style=discord.ButtonStyle.success)
